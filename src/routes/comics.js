@@ -24,38 +24,17 @@ router.get('/latest', async (req, res, next) => {
   }
 });
 
-// TODO: Implement GET /api/comics/:id
-router.get('/:id',
-  [
-    param('id')
-      .isInt({ min: 1 })
-      .withMessage('Comic ID must be a positive integer')
-  ],
-  validate,
-  async (req, res, next) => {
-    try {
-      // Get comic by ID using xkcdService.getById()
-      // Parse req.params.id to integer
-      // Pass any errors to next()
-      res.status(501).json({ error: 'Not implemented' });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-// TODO: Implement GET /api/comics/random
+// Implement GET /api/comics/random (register before parameterized routes)
 router.get('/random', async (req, res, next) => {
   try {
-    // Use xkcdService.getRandom() to get a random comic
-    // Handle any errors appropriately
-    res.status(501).json({ error: 'Not implemented' });
+    const comic = await xkcdService.getRandom();
+    res.json(comic);
   } catch (error) {
     next(error);
   }
 });
 
-// TODO: Implement GET /api/comics/search
+// Implement GET /api/comics/search (register before parameterized routes)
 router.get('/search',
   [
     query('q')
@@ -74,11 +53,72 @@ router.get('/search',
   validate,
   async (req, res, next) => {
     try {
-      // Extract q, page, limit from req.query
-      // Set defaults: page = 1, limit = 10
-      // Use xkcdService.search(q, page, limit)
-      // Return the search results
-      res.status(501).json({ error: 'Not implemented' });
+      const q = req.query.q;
+      const page = req.query.page ? parseInt(req.query.page, 10) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+
+      const results = await xkcdService.search(q, page, limit);
+      res.json(results);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+//Implement GET /api/comics/:id
+router.get('/:id',
+  [
+    param('id')
+      .isInt({ min: 1 })
+      .withMessage('Comic ID must be a positive integer')
+  ],
+  validate,
+  async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const comic = await xkcdService.getById(id);
+      res.json(comic);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+//Implement GET /api/comics/random
+router.get('/random', async (req, res, next) => {
+  try {
+    const comic = await xkcdService.getRandom();
+    res.json(comic);
+  } catch (error) {
+    next(error);
+  }
+});
+
+//Implement GET /api/comics/search
+router.get('/search',
+  [
+    query('q')
+      .trim()
+      .isLength({ min: 1, max: 100 })
+      .withMessage('Query must be between 1 and 100 characters'),
+    query('page')
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage('Page must be a positive integer'),
+    query('limit')
+      .optional()
+      .isInt({ min: 1, max: 50 })
+      .withMessage('Limit must be between 1 and 50')
+  ],
+  validate,
+  async (req, res, next) => {
+    try {
+      const q = req.query.q;
+      const page = req.query.page ? parseInt(req.query.page, 10) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+
+      const results = await xkcdService.search(q, page, limit);
+      res.json(results);
     } catch (error) {
       next(error);
     }
